@@ -26,6 +26,7 @@
     "karma-chrome-launcher": "^3.1.0",
     "karma-firefox-launcher": "^2.1.2",
     "karma-jasmine": "^5.0.0",
+    "puppeteer": "^23.6.0",
     "tslib": "^2.4.0",
     "typescript": "^5.0.3"
   },
@@ -34,7 +35,8 @@
     "build-prod": "rollup --config rollup.config.mjs --environment BUILD:production",
     "watch": "rollup --config rollup.config.mjs --watch",
     "e2e": "karma start karma.conf.cjs --single-run",
-    "e2e-watch": "karma start karma.conf.cjs"
+    "e2e-watch": "karma start karma.conf.cjs",
+    "generate-fixtures": "node tests/render-test/generate-fixtures.mjs"
   },
   "files": [
     "dist"

@@ -10,7 +10,8 @@ describe("Render document", function () {
     'line-spacing',
     'header-footer',
     'footnote',
-    'equation'
+    'equation',
+    'images'
   ];
 
   for (let path of tests) {
@@ -25,8 +26,8 @@ describe("Render document", function () {
 
       await docx.renderAsync(docBlob, div);
       
-      const actual = formatHTML(div.innerHTML);
-      const expected = formatHTML(resultText);
+		const actual = formatHTML(div.innerHTML);
+		const expected = formatHTML(resultText);
 
       expect(actual).toBe(expected);
 
@@ -48,5 +49,9 @@ describe("Render document", function () {
 });
 
 function formatHTML(text) {
-  return text.replace(/\t+|\s+/ig, ' ').replace(/></ig, '>\n<');
+  return text
+    .replace(/\t+|\s+/ig, ' ')
+    .replace(/blob:http[^"']+/ig, 'blob:uri')
+    .replace(/-->\s+</ig, '-->\n<')
+    .replace(/></ig, '>\n<');
 }

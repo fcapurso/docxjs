@@ -14,6 +14,7 @@ import { asArray, encloseFontFamily, escapeClassName, isString, keyBy, mergeDeep
 import { computePixelToPoint, updateTabStop } from './javascript';
 import { FontTablePart } from './font-table/font-table';
 import { FooterHeaderReference, SectionProperties } from './document/section';
+import { resolveDrawingLayout, AnchorHostPart } from "./document/drawing";
 import { WmlRun, RunProperties } from './document/run';
 import { WmlBookmarkStart } from './document/bookmarks';
 import { IDomStyle } from './document/style';
@@ -385,6 +386,8 @@ export class HtmlRenderer {
 				this.processElement(part.rootElement);
 				this.usedHederFooterParts.push(part.path);
 			}
+			part.rootElement.props ??= {};
+			part.rootElement.props.sectionProps = props;
 			const [el] = this.renderElements([part.rootElement], into) as HTMLElement[];
 
 			if (props?.pageMargins) {
@@ -1033,11 +1036,47 @@ section.${c}>footer { z-index: 1; }
 	renderDrawing(elem: OpenXmlElement) {
 		var result = this.renderContainer(elem, "div");
 
-		result.style.display = "inline-block";
-		result.style.position = "relative";
-		result.style.textIndent = "0px";
-
 		this.renderStyleValues(elem.cssStyle, result);
+
+		const drawing = elem.props?.drawing;
+		if (drawing) {
+			const hostPart = this.getAnchorHostPart(elem);
+			const section = this.findSectionPropsForElement(elem);
+			const layout = resolveDrawingLayout({
+				drawing,
+				section,
+				size: {
+					width: elem.cssStyle?.width,
+					height: elem.cssStyle?.height
+				},
+				hostPart
+			});
+
+			if (layout) {
+				result.style.position = layout.position ?? "relative";
+				if (layout.margin != null)
+					result.style.margin = layout.margin;
+				if (layout.width != null)
+					result.style.width = layout.width;
+				else if (layout.position === "relative")
+					result.style.width = "0px";
+
+				if (layout.height != null)
+					result.style.height = layout.height;
+				else if (layout.position === "relative")
+					result.style.height = "0px";
+				if (layout.left != null)
+					result.style.left = layout.left;
+				if (layout.top != null)
+					result.style.top = layout.top;
+				if (layout.zIndex != null)
+					result.style.zIndex = layout.zIndex;
+			}
+		}
+
+		result.style.display = result.style.display || "inline-block";
+		result.style.textIndent = result.style.textIndent || "0px";
+		result.style.position = result.style.position || "relative";
 
 		return result;
 	}
@@ -1096,6 +1135,36 @@ section.${c}>footer { z-index: 1; }
 			return this.renderContainer(elem, "del");
 
 		return null;
+	}
+
+	private getAnchorHostPart(elem: OpenXmlElement): AnchorHostPart {
+		if (findParent(elem, DomType.Header))
+			return "header";
+
+		if (findParent(elem, DomType.Footer))
+			return "footer";
+
+		return null;
+	}
+
+	private findSectionPropsForElement(elem: OpenXmlElement): SectionProperties {
+		const paragraph = findParent<WmlParagraph>(elem, DomType.Paragraph);
+
+		if (paragraph?.sectionProps)
+			return paragraph.sectionProps;
+
+		let current = elem;
+		while (current) {
+			const sectionProps = current.props?.sectionProps as SectionProperties;
+			if (sectionProps)
+				return sectionProps;
+
+			current = current.parent;
+		}
+
+		const documentElement = findParent<DocumentElement>(elem, DomType.Document);
+
+		return documentElement?.props ?? null;
 	}
 
 	renderSymbol(elem: WmlSymbol) {

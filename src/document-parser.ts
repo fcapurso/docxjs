@@ -552,6 +552,26 @@ export class DocumentParser {
 			}
 		}
 
+		const wrapTopAndBottomRuns: OpenXmlElement[] = [];
+
+		result.children = result.children.filter(child => {
+			if (child?.type === DomType.Run) {
+				const run = child as WmlRun;
+				const drawing = run.children?.find?.(c => c?.type === DomType.Drawing);
+
+				if (drawing?.props?.drawing?.wrapType === "topAndBottom") {
+					wrapTopAndBottomRuns.push(child);
+					return false;
+				}
+			}
+
+			return true;
+		});
+
+		if (wrapTopAndBottomRuns.length > 0) {
+			result.children = wrapTopAndBottomRuns.concat(result.children);
+		}
+
 		return result;
 	}
 
@@ -846,25 +866,23 @@ export class DocumentParser {
 		var result = <OpenXmlElement>{ type: DomType.Drawing, children: [], cssStyle: {} };
 		var isAnchor = node.localName == "anchor";
 
-		//TODO
-		// result.style["margin-left"] = xml.sizeAttr(node, "distL", SizeType.Emu);
-		// result.style["margin-top"] = xml.sizeAttr(node, "distT", SizeType.Emu);
-		// result.style["margin-right"] = xml.sizeAttr(node, "distR", SizeType.Emu);
-		// result.style["margin-bottom"] = xml.sizeAttr(node, "distB", SizeType.Emu);
-
-		let wrapType: "wrapTopAndBottom" | "wrapNone" | null = null;
+		let wrapType: "topAndBottom" | "none" | null = null;
 		let simplePos = xml.boolAttr(node, "simplePos");
 		let behindDoc = xml.boolAttr(node, "behindDoc");
+		let allowOverlap = xml.boolAttr(node, "allowOverlap");
+		let layoutInCell = xml.boolAttr(node, "layoutInCell", true);
 
-		let posX = { relative: "page", align: "left", offset: "0" };
-		let posY = { relative: "page", align: "top", offset: "0" };
+		let posX = { relative: "page", align: "left", offset: null as string };
+		let posY = { relative: "page", align: "top", offset: null as string };
+		let simplePosX: string = null;
+		let simplePosY: string = null;
 
 		for (var n of xml.elements(node)) {
 			switch (n.localName) {
 				case "simplePos":
 					if (simplePos) {
-						posX.offset = xml.lengthAttr(n, "x", LengthUsage.Emu);
-						posY.offset = xml.lengthAttr(n, "y", LengthUsage.Emu);
+						simplePosX = xml.lengthAttr(n, "x", LengthUsage.Emu);
+						simplePosY = xml.lengthAttr(n, "y", LengthUsage.Emu);
 					}
 					break;
 
@@ -891,11 +909,11 @@ export class DocumentParser {
 					break;
 
 				case "wrapTopAndBottom":
-					wrapType = "wrapTopAndBottom";
+					wrapType = "topAndBottom";
 					break;
 
 				case "wrapNone":
-					wrapType = "wrapNone";
+					wrapType = "none";
 					break;
 
 				case "graphic":
@@ -907,7 +925,31 @@ export class DocumentParser {
 			}
 		}
 
-		if (wrapType == "wrapTopAndBottom") {
+		const margins = {
+			top: xml.lengthAttr(node, "distT", LengthUsage.Emu),
+			bottom: xml.lengthAttr(node, "distB", LengthUsage.Emu),
+			left: xml.lengthAttr(node, "distL", LengthUsage.Emu),
+			right: xml.lengthAttr(node, "distR", LengthUsage.Emu)
+		};
+
+		result.props = {
+			...result.props,
+			drawing: {
+				anchor: isAnchor,
+				wrapType,
+				simplePos,
+				simplePosX,
+				simplePosY,
+				positionH: posX,
+				positionV: posY,
+				behindDoc,
+				allowOverlap,
+				layoutInCell,
+				margins
+			}
+		};
+
+		if (wrapType == "topAndBottom") {
 			result.cssStyle['display'] = 'block';
 
 			if (posX.align) {
@@ -915,16 +957,8 @@ export class DocumentParser {
 				result.cssStyle['width'] = "100%";
 			}
 		}
-		else if (wrapType == "wrapNone") {
+		else if (wrapType == "none") {
 			result.cssStyle['display'] = 'block';
-			result.cssStyle['position'] = 'relative';
-			result.cssStyle["width"] = "0px";
-			result.cssStyle["height"] = "0px";
-
-			if (posX.offset)
-				result.cssStyle["left"] = posX.offset;
-			if (posY.offset)
-				result.cssStyle["top"] = posY.offset;
 		}
 		else if (isAnchor && (posX.align == 'left' || posX.align == 'right')) {
 			result.cssStyle["float"] = posX.align;
