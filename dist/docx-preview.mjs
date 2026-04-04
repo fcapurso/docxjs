@@ -1803,6 +1803,21 @@ class DocumentParser {
                     break;
             }
         }
+        const wrapTopAndBottomRuns = [];
+        result.children = result.children.filter(child => {
+            if (child?.type === DomType.Run) {
+                const run = child;
+                const drawing = run.children?.find?.(c => c?.type === DomType.Drawing);
+                if (drawing?.props?.drawing?.wrapType === "topAndBottom") {
+                    wrapTopAndBottomRuns.push(child);
+                    return false;
+                }
+            }
+            return true;
+        });
+        if (wrapTopAndBottomRuns.length > 0) {
+            result.children = wrapTopAndBottomRuns.concat(result.children);
+        }
         return result;
     }
     parseParagraphProperties(elem, paragraph) {
@@ -2052,15 +2067,19 @@ class DocumentParser {
         var isAnchor = node.localName == "anchor";
         let wrapType = null;
         let simplePos = globalXmlParser.boolAttr(node, "simplePos");
-        globalXmlParser.boolAttr(node, "behindDoc");
-        let posX = { relative: "page", align: "left", offset: "0" };
-        let posY = { relative: "page", align: "top", offset: "0" };
+        let behindDoc = globalXmlParser.boolAttr(node, "behindDoc");
+        let allowOverlap = globalXmlParser.boolAttr(node, "allowOverlap");
+        let layoutInCell = globalXmlParser.boolAttr(node, "layoutInCell", true);
+        let posX = { relative: "page", align: "left", offset: null };
+        let posY = { relative: "page", align: "top", offset: null };
+        let simplePosX = null;
+        let simplePosY = null;
         for (var n of globalXmlParser.elements(node)) {
             switch (n.localName) {
                 case "simplePos":
                     if (simplePos) {
-                        posX.offset = globalXmlParser.lengthAttr(n, "x", LengthUsage.Emu);
-                        posY.offset = globalXmlParser.lengthAttr(n, "y", LengthUsage.Emu);
+                        simplePosX = globalXmlParser.lengthAttr(n, "x", LengthUsage.Emu);
+                        simplePosY = globalXmlParser.lengthAttr(n, "y", LengthUsage.Emu);
                     }
                     break;
                 case "extent":
@@ -2081,10 +2100,10 @@ class DocumentParser {
                     }
                     break;
                 case "wrapTopAndBottom":
-                    wrapType = "wrapTopAndBottom";
+                    wrapType = "topAndBottom";
                     break;
                 case "wrapNone":
-                    wrapType = "wrapNone";
+                    wrapType = "none";
                     break;
                 case "graphic":
                     var g = this.parseGraphic(n);
@@ -2093,22 +2112,37 @@ class DocumentParser {
                     break;
             }
         }
-        if (wrapType == "wrapTopAndBottom") {
+        const margins = {
+            top: globalXmlParser.lengthAttr(node, "distT", LengthUsage.Emu),
+            bottom: globalXmlParser.lengthAttr(node, "distB", LengthUsage.Emu),
+            left: globalXmlParser.lengthAttr(node, "distL", LengthUsage.Emu),
+            right: globalXmlParser.lengthAttr(node, "distR", LengthUsage.Emu)
+        };
+        result.props = {
+            ...result.props,
+            drawing: {
+                anchor: isAnchor,
+                wrapType,
+                simplePos,
+                simplePosX,
+                simplePosY,
+                positionH: posX,
+                positionV: posY,
+                behindDoc,
+                allowOverlap,
+                layoutInCell,
+                margins
+            }
+        };
+        if (wrapType == "topAndBottom") {
             result.cssStyle['display'] = 'block';
             if (posX.align) {
                 result.cssStyle['text-align'] = posX.align;
                 result.cssStyle['width'] = "100%";
             }
         }
-        else if (wrapType == "wrapNone") {
+        else if (wrapType == "none") {
             result.cssStyle['display'] = 'block';
-            result.cssStyle['position'] = 'relative';
-            result.cssStyle["width"] = "0px";
-            result.cssStyle["height"] = "0px";
-            if (posX.offset)
-                result.cssStyle["left"] = posX.offset;
-            if (posY.offset)
-                result.cssStyle["top"] = posY.offset;
         }
         else if (isAnchor && (posX.align == 'left' || posX.align == 'right')) {
             result.cssStyle["float"] = posX.align;
@@ -2836,6 +2870,122 @@ function lengthToPoint(length) {
     return parseFloat(length);
 }
 
+function resolveDrawingLayout(options) {
+    const { drawing, section, size = {}, hostPart } = options;
+    if (!drawing?.anchor)
+        return null;
+    if (drawing.wrapType && drawing.wrapType !== "none")
+        return null;
+    const margins = section?.pageMargins ?? {};
+    const pageRelative = isPageRelativeAnchor(drawing);
+    const left = resolveAxisOffset("horizontal", drawing, margins, size.width, hostPart);
+    const top = resolveAxisOffset("vertical", drawing, margins, size.height, hostPart);
+    const baseZ = drawing.behindDoc
+        ? "-1"
+        : (hostPart === "header" || hostPart === "footer") ? "0" : "10";
+    return {
+        position: pageRelative ? "absolute" : "relative",
+        margin: "0",
+        zIndex: baseZ,
+        left: left ?? undefined,
+        top: top ?? undefined
+    };
+}
+function isPageRelativeAnchor(drawing) {
+    if (drawing?.simplePos)
+        return true;
+    const pageRefs = new Set([
+        "page",
+        "margin",
+        "leftMargin",
+        "rightMargin",
+        "insideMargin",
+        "outsideMargin"
+    ]);
+    const horizontalRef = drawing?.positionH?.relative;
+    const verticalRef = drawing?.positionV?.relative;
+    return pageRefs.has(horizontalRef) || pageRefs.has(verticalRef);
+}
+function resolveAxisOffset(axis, drawing, margins, size, hostPart) {
+    const simpleCoord = axis === "horizontal" ? drawing.simplePosX : drawing.simplePosY;
+    if (drawing.simplePos && simpleCoord)
+        return simpleCoord;
+    const pos = axis === "horizontal" ? drawing.positionH : drawing.positionV;
+    if (!pos)
+        return null;
+    if (pos.offset)
+        return pos.offset;
+    const align = pos.align;
+    if (!align)
+        return null;
+    const relative = pos.relative ?? "page";
+    switch (relative) {
+        case "page":
+            return alignToPage(align, size);
+        case "margin":
+        case "leftMargin":
+        case "rightMargin":
+        case "insideMargin":
+        case "outsideMargin":
+            return alignToMargins(axis, align, size, margins, hostPart);
+        default:
+            return alignWithinContainer(align, size);
+    }
+}
+function alignToPage(align, size) {
+    switch (align) {
+        case "left":
+        case "top":
+            return "0px";
+        case "right":
+        case "bottom":
+            return size ? `calc(100% - ${size})` : "100%";
+        case "center":
+            return size ? `calc(50% - (${size} / 2))` : "50%";
+        default:
+            return "0px";
+    }
+}
+function alignToMargins(axis, align, size, margins, hostPart) {
+    const startMargin = ensureLength(axis === "horizontal" ? margins.left : margins.top);
+    const endMargin = ensureLength(axis === "horizontal" ? margins.right : margins.bottom);
+    const applyMargins = !hostPart;
+    const start = applyMargins ? startMargin : "0px";
+    const end = applyMargins ? endMargin : "0px";
+    switch (align) {
+        case "left":
+        case "top":
+            return start;
+        case "right":
+        case "bottom":
+            if (size)
+                return `calc(100% - ${end} - ${size})`;
+            return `calc(100% - ${end})`;
+        case "center":
+            if (size)
+                return applyMargins && (start !== "0px" || end !== "0px")
+                    ? `calc(50% - (${size} / 2))`
+                    : `calc(50% - (${size} / 2))`;
+            return "50%";
+        default:
+            return start;
+    }
+}
+function alignWithinContainer(align, size) {
+    switch (align) {
+        case "right":
+        case "bottom":
+            return size ? `calc(100% - ${size})` : "100%";
+        case "center":
+            return size ? `calc(50% - (${size} / 2))` : "50%";
+        default:
+            return "0px";
+    }
+}
+function ensureLength(value) {
+    return value ?? "0px";
+}
+
 const ns = {
     svg: "http://www.w3.org/2000/svg",
     mathML: "http://www.w3.org/1998/Math/MathML"
@@ -3088,6 +3238,7 @@ class HtmlRenderer {
         return result;
     }
     renderHeaderFooter(refs, props, page, firstOfSection, into) {
+        var _a;
         if (!refs)
             return;
         var ref = (props.titlePage && firstOfSection ? refs.find(x => x.type == "first") : null)
@@ -3100,6 +3251,8 @@ class HtmlRenderer {
                 this.processElement(part.rootElement);
                 this.usedHederFooterParts.push(part.path);
             }
+            (_a = part.rootElement).props ?? (_a.props = {});
+            part.rootElement.props.sectionProps = props;
             const [el] = this.renderElements([part.rootElement], into);
             if (props?.pageMargins) {
                 if (part.rootElement.type === DomType.Header) {
@@ -3536,10 +3689,43 @@ section.${c}>footer { z-index: 1; }
     }
     renderDrawing(elem) {
         var result = this.renderContainer(elem, "div");
-        result.style.display = "inline-block";
-        result.style.position = "relative";
-        result.style.textIndent = "0px";
         this.renderStyleValues(elem.cssStyle, result);
+        const drawing = elem.props?.drawing;
+        if (drawing) {
+            const hostPart = this.getAnchorHostPart(elem);
+            const section = this.findSectionPropsForElement(elem);
+            const layout = resolveDrawingLayout({
+                drawing,
+                section,
+                size: {
+                    width: elem.cssStyle?.width,
+                    height: elem.cssStyle?.height
+                },
+                hostPart
+            });
+            if (layout) {
+                result.style.position = layout.position ?? "relative";
+                if (layout.margin != null)
+                    result.style.margin = layout.margin;
+                if (layout.width != null)
+                    result.style.width = layout.width;
+                else if (layout.position === "relative")
+                    result.style.width = "0px";
+                if (layout.height != null)
+                    result.style.height = layout.height;
+                else if (layout.position === "relative")
+                    result.style.height = "0px";
+                if (layout.left != null)
+                    result.style.left = layout.left;
+                if (layout.top != null)
+                    result.style.top = layout.top;
+                if (layout.zIndex != null)
+                    result.style.zIndex = layout.zIndex;
+            }
+        }
+        result.style.display = result.style.display || "inline-block";
+        result.style.textIndent = result.style.textIndent || "0px";
+        result.style.position = result.style.position || "relative";
         return result;
     }
     renderImage(elem) {
@@ -3582,6 +3768,27 @@ section.${c}>footer { z-index: 1; }
         if (this.options.renderChanges)
             return this.renderContainer(elem, "del");
         return null;
+    }
+    getAnchorHostPart(elem) {
+        if (findParent(elem, DomType.Header))
+            return "header";
+        if (findParent(elem, DomType.Footer))
+            return "footer";
+        return null;
+    }
+    findSectionPropsForElement(elem) {
+        const paragraph = findParent(elem, DomType.Paragraph);
+        if (paragraph?.sectionProps)
+            return paragraph.sectionProps;
+        let current = elem;
+        while (current) {
+            const sectionProps = current.props?.sectionProps;
+            if (sectionProps)
+                return sectionProps;
+            current = current.parent;
+        }
+        const documentElement = findParent(elem, DomType.Document);
+        return documentElement?.props ?? null;
     }
     renderSymbol(elem) {
         var span = this.createElement("span");
