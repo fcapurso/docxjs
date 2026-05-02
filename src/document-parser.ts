@@ -645,6 +645,9 @@ export class DocumentParser {
 				case "r":
 					result.children.push(this.parseRun(c, result));
 					break;
+				case "smartTag":
+					result.children.push(this.parseSmartTag(c, result));
+					break;
 			}
 		}
 
@@ -725,7 +728,7 @@ export class DocumentParser {
 					result.children.push(<WmlSymbol>{
 						type: DomType.Symbol,
 						font: encloseFontFamily(xml.attr(c, "font")),
-						char: xml.attr(c, "char")
+						char: xml.hexAttr(c, "char")
 					});
 					break;
 
@@ -751,7 +754,7 @@ export class DocumentParser {
 					let d = this.parseDrawing(c);
 
 					if (d)
-						result.children = [d];
+						result.children.push(d);
 					break;
 
 				case "pict":
