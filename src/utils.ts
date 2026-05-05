@@ -72,15 +72,30 @@ export function parseCssRules(text: string): Record<string, string> {
 	const result: Record<string, string> = {};
 
 	for (const rule of text.split(';')) {
-		const [key, val] = rule.split(':');
+		const trimmedRule = rule.trim();
+		if (!trimmedRule)
+			continue;
+
+		const splitIdx = trimmedRule.indexOf(':');
+		if (splitIdx === -1)
+			continue;
+
+		const key = trimmedRule.slice(0, splitIdx).trim();
+		if (!key)
+			continue;
+
+		const val = trimmedRule.slice(splitIdx + 1).trim();
 		result[key] = val;
 	}
 
-	return result
+	return result;
 }
 
 export function formatCssRules(style: Record<string, string>): string {
-	return Object.entries(style).map((k, v) => `${k}: ${v}`).join(';');
+	return Object.entries(style)
+		.filter(([key, val]) => !!key && val != null && val !== '')
+		.map(([key, val]) => `${key}: ${val}`)
+		.join('; ');
 }
 
 export function asArray<T>(val: T | T[]): T[] {

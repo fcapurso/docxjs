@@ -1,0 +1,487 @@
+<!--docxjs library predefined styles--><style>
+.docx-wrapper { background: gray; padding: 30px; padding-bottom: 0px; display: flex; flex-flow: column; align-items: center; } 
+.docx-wrapper>section.docx { background: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); margin-bottom: 30px; }
+.docx { color: black; hyphens: auto; text-underline-position: from-font; }
+section.docx { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
+section.docx>article { margin-bottom: auto; z-index: 1; }
+section.docx>footer { z-index: 1; }
+.docx table { border-collapse: collapse; }
+.docx table td, .docx table th { vertical-align: top; }
+.docx p { margin: 0pt; min-height: 1em; }
+.docx span { white-space: pre-wrap; overflow-wrap: break-word; }
+.docx a { color: inherit; text-decoration: inherit; }
+.docx svg { fill: transparent; }
+</style><!--docxjs document theme values--><style>.docx {
+  --docx-majorHAnsi-font: Aptos Display;
+  --docx-minorHAnsi-font: Aptos;
+  --docx-dk1-color: #000000;
+  --docx-lt1-color: #FFFFFF;
+  --docx-dk2-color: #0E2841;
+  --docx-lt2-color: #E8E8E8;
+  --docx-accent1-color: #156082;
+  --docx-accent2-color: #E97132;
+  --docx-accent3-color: #196B24;
+  --docx-accent4-color: #0F9ED5;
+  --docx-accent5-color: #A02B93;
+  --docx-accent6-color: #4EA72E;
+  --docx-hlink-color: #467886;
+  --docx-folHlink-color: #96607D;
+}
+</style><!--docxjs document styles--><style>.docx span {
+  font-family: Aptos;
+}
+.docx p, p.docx_normal {
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+.docx p, p.docx_normal span {
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading1 {
+  margin-top: 18.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+p.docx_heading1 span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 20.00pt;
+  font-size: 20.00pt;
+}
+p.docx_heading1 span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 20.00pt;
+  font-size: 20.00pt;
+}
+p.docx_heading2 {
+  margin-top: 8.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+p.docx_heading2 span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 16.00pt;
+  font-size: 16.00pt;
+}
+p.docx_heading2 span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 16.00pt;
+  font-size: 16.00pt;
+}
+p.docx_heading3 {
+  margin-top: 8.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+p.docx_heading3 span {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+p.docx_heading3 span {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+p.docx_heading4 {
+  margin-top: 4.00pt;
+  margin-bottom: 2.00pt;
+  line-height: 1.16;
+}
+p.docx_heading4 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading4 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #0F4761;
+}
+p.docx_heading5 {
+  margin-top: 4.00pt;
+  margin-bottom: 2.00pt;
+  line-height: 1.16;
+}
+p.docx_heading5 span {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading5 span {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+}
+p.docx_heading6 {
+  margin-top: 2.00pt;
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+p.docx_heading6 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #595959;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading6 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #595959;
+}
+p.docx_heading7 {
+  margin-top: 2.00pt;
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+p.docx_heading7 span {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading7 span {
+  font-family: 'Times New Roman';
+  color: #595959;
+}
+p.docx_heading8 {
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+p.docx_heading8 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #272727;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading8 span {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #272727;
+}
+p.docx_heading9 {
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+p.docx_heading9 span {
+  font-family: 'Times New Roman';
+  color: #272727;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_heading9 span {
+  font-family: 'Times New Roman';
+  color: #272727;
+}
+.docx table, table.docx_tablenormal td {
+  padding-top: 0.00pt;
+  padding-left: 5.40pt;
+  padding-bottom: 0.00pt;
+  padding-right: 5.40pt;
+}
+span.docx_heading1char {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 20.00pt;
+  font-size: 20.00pt;
+}
+span.docx_heading1char p {
+  margin-top: 18.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+span.docx_heading1char {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 20.00pt;
+  font-size: 20.00pt;
+}
+span.docx_heading2char {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 16.00pt;
+  font-size: 16.00pt;
+}
+span.docx_heading2char p {
+  margin-top: 8.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+span.docx_heading2char {
+  font-family: 'Aptos Display', 'Times New Roman';
+  color: #0F4761;
+  min-height: 16.00pt;
+  font-size: 16.00pt;
+}
+span.docx_heading3char {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+span.docx_heading3char p {
+  margin-top: 8.00pt;
+  margin-bottom: 4.00pt;
+  line-height: 1.16;
+}
+span.docx_heading3char {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+span.docx_heading4char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #0F4761;
+}
+span.docx_heading4char p {
+  margin-top: 4.00pt;
+  margin-bottom: 2.00pt;
+  line-height: 1.16;
+}
+span.docx_heading4char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_heading5char {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+}
+span.docx_heading5char p {
+  margin-top: 4.00pt;
+  margin-bottom: 2.00pt;
+  line-height: 1.16;
+}
+span.docx_heading5char {
+  font-family: 'Times New Roman';
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_heading6char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #595959;
+}
+span.docx_heading6char p {
+  margin-top: 2.00pt;
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+span.docx_heading6char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #595959;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_heading7char {
+  font-family: 'Times New Roman';
+  color: #595959;
+}
+span.docx_heading7char p {
+  margin-top: 2.00pt;
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+span.docx_heading7char {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_heading8char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #272727;
+}
+span.docx_heading8char p {
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+span.docx_heading8char {
+  font-family: 'Times New Roman';
+  font-style: italic;
+  color: #272727;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_heading9char {
+  font-family: 'Times New Roman';
+  color: #272727;
+}
+span.docx_heading9char p {
+  margin-bottom: 0.00pt;
+  line-height: 1.16;
+}
+span.docx_heading9char {
+  font-family: 'Times New Roman';
+  color: #272727;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_title {
+  margin-bottom: 4.00pt;
+  line-height: 1.00;
+}
+p.docx_title span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  min-height: 28.00pt;
+  font-size: 28.00pt;
+}
+p.docx_title span {
+  font-family: 'Aptos Display', 'Times New Roman';
+  min-height: 28.00pt;
+  font-size: 28.00pt;
+}
+span.docx_titlechar {
+  font-family: 'Aptos Display', 'Times New Roman';
+  min-height: 28.00pt;
+  font-size: 28.00pt;
+}
+span.docx_titlechar p {
+  margin-bottom: 4.00pt;
+  line-height: 1.00;
+}
+span.docx_titlechar {
+  font-family: 'Aptos Display', 'Times New Roman';
+  min-height: 28.00pt;
+  font-size: 28.00pt;
+}
+p.docx_subtitle {
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+p.docx_subtitle span {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+p.docx_subtitle span {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+span.docx_subtitlechar {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+span.docx_subtitlechar p {
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+span.docx_subtitlechar {
+  font-family: 'Times New Roman';
+  color: #595959;
+  min-height: 14.00pt;
+  font-size: 14.00pt;
+}
+p.docx_quote {
+  margin-top: 8.00pt;
+  text-align: center;
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+p.docx_quote span {
+  font-style: italic;
+  color: #404040;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_quote span {
+  font-style: italic;
+  color: #404040;
+}
+span.docx_quotechar {
+  font-style: italic;
+  color: #404040;
+}
+span.docx_quotechar p {
+  margin-top: 8.00pt;
+  text-align: center;
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+span.docx_quotechar {
+  font-style: italic;
+  color: #404040;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_listparagraph {
+  margin-inline-start: 36.00pt;
+  margin-bottom: 8.00pt;
+  line-height: 1.16;
+}
+p.docx_listparagraph span {
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_intenseemphasis {
+  font-style: italic;
+  color: #0F4761;
+}
+p.docx_intensequote {
+  border-top: 0.50pt solid #0F4761;
+  border-bottom: 0.50pt solid #0F4761;
+  margin-top: 18.00pt;
+  margin-bottom: 18.00pt;
+  margin-inline-start: 43.20pt;
+  margin-inline-end: 43.20pt;
+  text-align: center;
+  line-height: 1.16;
+}
+p.docx_intensequote span {
+  font-style: italic;
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+p.docx_intensequote span {
+  font-style: italic;
+  color: #0F4761;
+}
+span.docx_intensequotechar {
+  font-style: italic;
+  color: #0F4761;
+}
+span.docx_intensequotechar p {
+  border-top: 0.50pt solid #0F4761;
+  border-bottom: 0.50pt solid #0F4761;
+  margin-top: 18.00pt;
+  margin-bottom: 18.00pt;
+  margin-inline-start: 43.20pt;
+  margin-inline-end: 43.20pt;
+  text-align: center;
+  line-height: 1.16;
+}
+span.docx_intensequotechar {
+  font-style: italic;
+  color: #0F4761;
+  min-height: 12.00pt;
+  font-size: 12.00pt;
+}
+span.docx_intensereference {
+  font-weight: bold;
+  font-variant: small-caps;
+  color: #0F4761;
+}
+</style><div class="docx-wrapper"><section class="docx" style="padding: 72pt; width: 595.3pt; min-height: 841.9pt;"><article><p><span><div><svg style="position: absolute; margin-left: 207.8pt; margin-top: 20.4pt; width: 101.3pt; height: 165.75pt; z-index: 251657728; visibility: visible; mso-wrap-style: square; mso-width-percent: 0; mso-height-percent: 0; mso-wrap-distance-left: 9pt; mso-wrap-distance-top: 0; mso-wrap-distance-right: 9pt; mso-wrap-distance-bottom: 0; mso-position-horizontal: absolute; mso-position-horizontal-relative: text; mso-position-vertical: absolute; mso-position-vertical-relative: text; mso-width-relative: margin; mso-height-relative: margin"><g><foreignObject width="100%" height="100%"><div style="box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center;"><p><span lang="en-US">Middle aligned</span></p></div></foreignObject></g></svg></div></span><span><div><svg style="position: absolute; margin-left: 382.55pt; margin-top: 20.35pt; width: 101.3pt; height: 165.75pt; z-index: 251658752; visibility: visible; mso-wrap-style: square; mso-width-percent: 0; mso-height-percent: 0; mso-wrap-distance-left: 9pt; mso-wrap-distance-top: 0; mso-wrap-distance-right: 9pt; mso-wrap-distance-bottom: 0; mso-position-horizontal: absolute; mso-position-horizontal-relative: text; mso-position-vertical: absolute; mso-position-vertical-relative: text; mso-width-relative: margin; mso-height-relative: margin"><g><foreignObject width="100%" height="100%"><div style="box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;"><p><span lang="en-US">Bottom aligned</span></p></div></foreignObject></g></svg></div></span><span><div><svg style="position: absolute; margin-left: 33.05pt; margin-top: 20.1pt; width: 101.3pt; height: 165.75pt; z-index: 251656704; visibility: visible; mso-wrap-style: square; mso-width-percent: 0; mso-height-percent: 0; mso-wrap-distance-left: 9pt; mso-wrap-distance-top: 0; mso-wrap-distance-right: 9pt; mso-wrap-distance-bottom: 0; mso-position-horizontal: absolute; mso-position-horizontal-relative: text; mso-position-vertical: absolute; mso-position-vertical-relative: text; mso-width-relative: margin; mso-height-relative: margin"><g><foreignObject width="100%" height="100%"><div style="box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: flex-start;"><p><span lang="en-US">Top aligned</span></p></div></foreignObject></g></svg></div></span></p></article></section></div>

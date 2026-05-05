@@ -11,7 +11,8 @@ describe("Render document", function () {
     'header-footer',
     'footnote',
     'equation',
-    'images'
+    'images',
+    'textbox-vml'
   ];
 
   for (let path of tests) {

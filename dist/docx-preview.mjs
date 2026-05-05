@@ -97,6 +97,29 @@ function mergeDeep(target, ...sources) {
     }
     return mergeDeep(target, ...sources);
 }
+function parseCssRules(text) {
+    const result = {};
+    for (const rule of text.split(';')) {
+        const trimmedRule = rule.trim();
+        if (!trimmedRule)
+            continue;
+        const splitIdx = trimmedRule.indexOf(':');
+        if (splitIdx === -1)
+            continue;
+        const key = trimmedRule.slice(0, splitIdx).trim();
+        if (!key)
+            continue;
+        const val = trimmedRule.slice(splitIdx + 1).trim();
+        result[key] = val;
+    }
+    return result;
+}
+function formatCssRules(style) {
+    return Object.entries(style)
+        .filter(([key, val]) => !!key && val != null && val !== '')
+        .map(([key, val]) => `${key}: ${val}`)
+        .join('; ');
+}
 function asArray(val) {
     return Array.isArray(val) ? val : [val];
 }
@@ -1296,7 +1319,9 @@ function parseVmlElement(elem, parser) {
     for (const at of globalXmlParser.attrs(elem)) {
         switch (at.localName) {
             case "style":
-                result.cssStyleText = at.value;
+                const style = parseStyle(at.value);
+                result.cssStyleText = style.cssStyleText;
+                result.presentationStyle = style.presentationStyle;
                 break;
             case "fillcolor":
                 result.attrs.fill = at.value;
@@ -1349,6 +1374,47 @@ function parseFill(el) {
 }
 function parsePoint(val) {
     return val.split(",");
+}
+function parseStyle(cssStyleText) {
+    const parsedStyle = parseCssRules(cssStyleText);
+    const presentationStyle = {};
+    for (const [key, value] of Object.entries(parsedStyle)) {
+        const normalizedKey = key.trim().toLowerCase();
+        switch (normalizedKey) {
+            case "v-text-anchor":
+                switch (value.trim().toLowerCase()) {
+                    case "bottom":
+                    case "bottom-center":
+                    case "bottom-baseline":
+                        presentationStyle.justifyContent = "flex-end";
+                        break;
+                    case "middle":
+                    case "center":
+                    case "middle-center":
+                    case "center-center":
+                        presentationStyle.justifyContent = "center";
+                        break;
+                    default:
+                        presentationStyle.justifyContent = "flex-start";
+                        break;
+                }
+                presentationStyle.contentHostStyle = {
+                    boxSizing: "border-box",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: presentationStyle.justifyContent
+                };
+                delete parsedStyle[key];
+                break;
+        }
+    }
+    const svgStyleText = formatCssRules(parsedStyle);
+    return {
+        cssStyleText: svgStyleText || undefined,
+        presentationStyle: Object.keys(presentationStyle).length ? presentationStyle : undefined
+    };
 }
 
 class WmlComment extends OpenXmlElementBase {
@@ -3949,15 +4015,54 @@ section.${c}>footer { z-index: 1; }
     renderVmlChildElement(elem) {
         const result = this.createSvgElement(elem.tagName);
         Object.entries(elem.attrs).forEach(([k, v]) => result.setAttribute(k, v));
+        let contentTarget = result;
+        const wrapper = this.getInsertedVmlWrapperSpec(elem);
+        if (wrapper) {
+            const contentHost = this.h({
+                ns: wrapper.ns,
+                tagName: wrapper.tagName,
+                style: wrapper.style
+            });
+            result.appendChild(contentHost);
+            contentTarget = contentHost;
+        }
         for (let child of elem.children) {
             if (child.type == DomType.VmlElement) {
-                result.appendChild(this.renderVmlChildElement(child));
+                contentTarget.appendChild(this.renderVmlChildElement(child));
             }
             else {
-                result.appendChild(...asArray(this.renderElement(child)));
+                contentTarget.appendChild(...asArray(this.renderElement(child)));
             }
         }
         return result;
+    }
+    getInsertedVmlWrapperSpec(elem) {
+        switch (elem.tagName) {
+            case "foreignObject":
+                const contentHost = this.findVmlContentHost(elem);
+                if (!contentHost?.presentationStyle?.contentHostStyle)
+                    return null;
+                return {
+                    ns: ns.html,
+                    tagName: "div",
+                    style: contentHost.presentationStyle.contentHostStyle
+                };
+            default:
+                return null;
+        }
+    }
+    findVmlContentHost(elem) {
+        if (elem.presentationStyle?.contentHostStyle)
+            return elem;
+        let search = elem;
+        while (true) {
+            const vmlParent = findParent(search, DomType.VmlElement);
+            if (!vmlParent)
+                return undefined;
+            if (vmlParent.presentationStyle?.contentHostStyle)
+                return vmlParent;
+            search = vmlParent;
+        }
     }
     renderMmlRadical(elem) {
         const base = elem.children.find(el => el.type == DomType.MmlBase);

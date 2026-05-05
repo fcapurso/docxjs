@@ -30,6 +30,12 @@ interface CellPos {
 	row: number;
 }
 
+interface VmlWrapperSpec {
+	ns: ns;
+	tagName: string;
+	style?: Record<string, string>;
+}
+
 interface Section {
 	sectProps: SectionProperties;
 	elements: OpenXmlElement[];
@@ -1282,16 +1288,63 @@ section.${c}>footer { z-index: 1; }
 	renderVmlChildElement(elem: VmlElement): any {
 		const result = this.createSvgElement(elem.tagName as any);
 		Object.entries(elem.attrs).forEach(([k, v]) => result.setAttribute(k, v));
+		let contentTarget = result;
+
+		const wrapper = this.getInsertedVmlWrapperSpec(elem);
+		if (wrapper) {
+			const contentHost = this.h({
+				ns: wrapper.ns,
+				tagName: wrapper.tagName,
+				style: wrapper.style
+			}) as Node;
+			result.appendChild(contentHost);
+			contentTarget = contentHost;
+		}
 
 		for (let child of elem.children) {
 			if (child.type == DomType.VmlElement) {
-				result.appendChild(this.renderVmlChildElement(child as VmlElement));
+				contentTarget.appendChild(this.renderVmlChildElement(child as VmlElement));
 			} else {
-				result.appendChild(...asArray(this.renderElement(child as any)));
+				contentTarget.appendChild(...asArray(this.renderElement(child as any)));
 			}
 		}
 
 		return result;
+	}
+
+	private getInsertedVmlWrapperSpec(elem: VmlElement): VmlWrapperSpec | null {
+		switch (elem.tagName) {
+			case "foreignObject":
+				const contentHost = this.findVmlContentHost(elem);
+				if (!contentHost?.presentationStyle?.contentHostStyle)
+					return null;
+
+				return {
+					ns: ns.html,
+					tagName: "div",
+					style: contentHost.presentationStyle.contentHostStyle
+				};
+
+			default:
+				return null;
+		}
+	}
+
+	private findVmlContentHost(elem: VmlElement): VmlElement | undefined {
+		if (elem.presentationStyle?.contentHostStyle)
+			return elem;
+
+		let search = elem;
+		while (true) {
+			const vmlParent = findParent<VmlElement>(search, DomType.VmlElement);
+			if (!vmlParent)
+				return undefined;
+
+			if (vmlParent.presentationStyle?.contentHostStyle)
+				return vmlParent;
+
+			search = vmlParent;
+		}
 	}
 
 	renderMmlRadical(elem: OpenXmlElement) {
