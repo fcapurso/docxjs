@@ -3502,13 +3502,14 @@
 .${c} { color: black; hyphens: auto; text-underline-position: from-font; }
 section.${c} { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
 section.${c}>article { margin-bottom: auto; z-index: 1; }
-section.${c}>footer { z-index: 1; }
+section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; box-sizing: border-box; }
 .${c} table { border-collapse: collapse; }
 .${c} table td, .${c} table th { vertical-align: top; }
 .${c} p { margin: 0pt; min-height: 1em; }
 .${c} span { white-space: pre-wrap; overflow-wrap: break-word; }
 .${c} a { color: inherit; text-decoration: inherit; }
 .${c} svg { fill: transparent; }
+@media print { section.${c} { overflow: visible; } }
 `;
             if (this.options.renderComments) {
                 styleText += `

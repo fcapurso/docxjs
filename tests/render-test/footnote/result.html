@@ -4,13 +4,14 @@
 .docx { color: black; hyphens: auto; text-underline-position: from-font; }
 section.docx { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
 section.docx>article { margin-bottom: auto; z-index: 1; }
-section.docx>footer { z-index: 1; }
+section.docx>footer { z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; box-sizing: border-box; }
 .docx table { border-collapse: collapse; }
 .docx table td, .docx table th { vertical-align: top; }
 .docx p { margin: 0pt; min-height: 1em; }
 .docx span { white-space: pre-wrap; overflow-wrap: break-word; }
 .docx a { color: inherit; text-decoration: inherit; }
 .docx svg { fill: transparent; }
+@media print { section.docx { overflow: visible; } }
 </style><!--docxjs document styles--><style>.docx span {
   font-family: 'Liberation Serif', NSimSun;
 }
