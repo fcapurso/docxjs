@@ -3508,7 +3508,8 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 .${c} span { white-space: pre-wrap; overflow-wrap: break-word; }
 .${c} a { color: inherit; text-decoration: inherit; }
 .${c} svg { fill: transparent; }
-@media print { section.${c} { overflow: visible; } }
+.${c}-page-break { display: none; }
+@media print { section.${c} { overflow: visible; } .${c}-page-break { display: block; height: 0; break-after: page; page-break-after: always; } }
 `;
         if (this.options.renderComments) {
             styleText += `
@@ -3878,17 +3879,28 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
         return this.options.renderChanges ? this.renderText(elem) : null;
     }
     renderBreak(elem) {
-        if (elem.break != "textWrapping")
-            return null;
-        return [
-            this.h({ tagName: "br" }),
-            this.h({
-                tagName: "span",
-                children: ["\u200b"],
-                ariaHidden: "true",
-                style: { userSelect: "none" }
-            })
-        ];
+        let result = null;
+        switch (elem.break) {
+            case "page":
+                result = this.h({
+                    tagName: "span",
+                    className: `${this.className}-page-break`,
+                    ariaHidden: "true"
+                });
+                break;
+            case "textWrapping":
+                result = [
+                    this.h({ tagName: "br" }),
+                    this.h({
+                        tagName: "span",
+                        children: ["\u200b"],
+                        ariaHidden: "true",
+                        style: { userSelect: "none" }
+                    })
+                ];
+                break;
+        }
+        return result;
     }
     renderInserted(elem) {
         if (this.options.renderChanges)

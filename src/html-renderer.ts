@@ -544,7 +544,8 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 .${c} span { white-space: pre-wrap; overflow-wrap: break-word; }
 .${c} a { color: inherit; text-decoration: inherit; }
 .${c} svg { fill: transparent; }
-@media print { section.${c} { overflow: visible; } }
+.${c}-page-break { display: none; }
+@media print { section.${c} { overflow: visible; } .${c}-page-break { display: block; height: 0; break-after: page; page-break-after: always; } }
 `;
 
 		if (this.options.renderComments) {
@@ -1100,18 +1101,34 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 	}
 
 	renderBreak(elem: WmlBreak) {
-		if (elem.break != "textWrapping")
-			return null;
+		let result: Node | Node[] = null;
 
-		return [
-			this.h({ tagName: "br" }),
-			this.h({
-				tagName: "span",
-				children: ["\u200b"],
-				ariaHidden: "true",
-				style: { userSelect: "none" }
-			})
-		];
+		switch (elem.break) {
+			case "page":
+				result = this.h({
+					tagName: "span",
+					className: `${this.className}-page-break`,
+					ariaHidden: "true"
+				});
+				break;
+
+			case "textWrapping":
+				result = [
+					this.h({ tagName: "br" }),
+					this.h({
+						tagName: "span",
+						children: ["\u200b"],
+						ariaHidden: "true",
+						style: { userSelect: "none" }
+					})
+				];
+				break;
+
+			default:
+				break;
+		}
+
+		return result;
 	}
 
 	renderInserted(elem: OpenXmlElement): Node | Node[] {
