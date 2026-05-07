@@ -1100,7 +1100,18 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 	}
 
 	renderBreak(elem: WmlBreak) {
-		return elem.break == "textWrapping" ? this.h({ tagName: "br" }) : null;
+		if (elem.break != "textWrapping")
+			return null;
+
+		return [
+			this.h({ tagName: "br" }),
+			this.h({
+				tagName: "span",
+				children: ["\u200b"],
+				ariaHidden: "true",
+				style: { userSelect: "none" }
+			})
+		];
 	}
 
 	renderInserted(elem: OpenXmlElement): Node | Node[] {

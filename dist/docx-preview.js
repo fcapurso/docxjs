@@ -3882,7 +3882,17 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
             return this.options.renderChanges ? this.renderText(elem) : null;
         }
         renderBreak(elem) {
-            return elem.break == "textWrapping" ? this.h({ tagName: "br" }) : null;
+            if (elem.break != "textWrapping")
+                return null;
+            return [
+                this.h({ tagName: "br" }),
+                this.h({
+                    tagName: "span",
+                    children: ["\u200b"],
+                    ariaHidden: "true",
+                    style: { userSelect: "none" }
+                })
+            ];
         }
         renderInserted(elem) {
             if (this.options.renderChanges)
