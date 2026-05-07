@@ -3139,6 +3139,7 @@ class HtmlRenderer {
         this.rootSelector = options.inWrapper ? `.${this.className}-wrapper` : ':root';
         this.h = options.h ?? h;
         this.styleMap = null;
+        this.defaultParagraphStyleName = null;
         this.tasks = [];
         if (this.options.renderComments && globalThis.Highlight) {
             this.commentHighlight = new Highlight();
@@ -3257,6 +3258,8 @@ class HtmlRenderer {
         for (let style of styles) {
             style.cssName = this.processStyleName(style.id);
         }
+        this.defaultParagraphStyleName = styles.find(s => s.target == "p" && s.isDefault)?.id
+            ?? (stylesMap["Normal"] ? "Normal" : null);
         return stylesMap;
     }
     prodessNumberings(numberings) {
@@ -3416,7 +3419,7 @@ class HtmlRenderer {
         var result = [current];
         for (let elem of elements) {
             if (elem.type == DomType.Paragraph) {
-                const s = this.findStyle(elem.styleName);
+                const s = this.findStyle(this.effectiveParagraphStyleName(elem));
                 if (s?.paragraphProps?.pageBreakBefore) {
                     current.sectProps = sectProps;
                     current.pageBreak = true;
@@ -3740,7 +3743,7 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
     }
     renderParagraph(elem) {
         var result = this.toHTML(elem, ns.html, "p");
-        const style = this.findStyle(elem.styleName);
+        const style = this.findStyle(this.effectiveParagraphStyleName(elem));
         elem.tabs ?? (elem.tabs = style?.paragraphProps?.tabs);
         const numbering = elem.numbering ?? style?.paragraphProps?.numbering;
         if (numbering) {
@@ -4146,7 +4149,10 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
     }
     toH(elem, ns, tagName, children = null) {
         const { "$lang": lang, ...style } = elem.cssStyle ?? {};
-        const className = cx(elem.className, elem.styleName && this.processStyleName(elem.styleName));
+        const styleName = elem.type == DomType.Paragraph
+            ? this.effectiveParagraphStyleName(elem)
+            : elem.styleName;
+        const className = cx(elem.className, styleName && this.processStyleName(styleName));
         return { ns, tagName, className, lang, style, children: children ?? this.renderElements(elem.children) };
     }
     toHTML(elem, ns, tagName, children = null) {
@@ -4154,6 +4160,9 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
     }
     findStyle(styleName) {
         return styleName && this.styleMap?.[styleName];
+    }
+    effectiveParagraphStyleName(elem) {
+        return elem.styleName || this.defaultParagraphStyleName;
     }
     numberingClass(id, lvl) {
         return `${this.className}-num-${id}-${lvl}`;
