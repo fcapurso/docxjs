@@ -712,7 +712,7 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 
 			for (const subStyle of subStyles) {
 				//TODO temporary disable modificators until test it well
-				var selector = `${style.target ?? ''}.${style.cssName}`; //${subStyle.mod ?? ''} 
+				var selector = `${style.target ?? ''}.${style.cssName}`; //${subStyle.mod ?? ''}
 
 				if (style.target != subStyle.target)
 					selector += ` ${subStyle.target}`;
@@ -721,6 +721,15 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 					selector = `.${this.className} ${style.target}, ` + selector;
 
 				styleText += this.styleToString(selector, subStyle.values);
+
+				if (style.target === "p" && subStyle.target === "span") {
+					const fontAttrs = ["font-size", "font-family"].filter(k => subStyle.values[k]);
+					if (fontAttrs.length > 0)
+						styleText += this.styleToString(
+							`${style.target}.${style.cssName}::before`,
+							this.copyStyleProperties(subStyle.values, null, fontAttrs)
+						);
+				}
 			}
 		}
 
