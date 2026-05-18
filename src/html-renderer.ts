@@ -63,6 +63,7 @@ export class HtmlRenderer {
 
 	footnoteMap: Record<string, WmlFootnote> = {};
 	endnoteMap: Record<string, WmlFootnote> = {};
+	numberingGeometry: Record<string, string | null> = {};
 	currentFootnoteIds: string[];
 	currentEndnoteIds: string[] = [];
 	usedHederFooterParts: any[] = [];
@@ -631,23 +632,43 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 	async renderNumbering(numberings: IDomNumbering[]) {
 		var styleText = "";
 		var resetCounters = [];
+		const hangingVar = "--docx-num-hanging-width";
+		const beforeDisplayVar = "--docx-num-before-display";
+		this.numberingGeometry = {};
 
 		for (var num of numberings) {
 			var selector = `p.${this.numberingClass(num.id, num.level)}`;
 			var listStyleType = "none";
 
+			const textIndent = num.pStyle["text-indent"];
+			const hangingWidth = textIndent?.startsWith("-") ? textIndent.slice(1) : null;
+			this.numberingGeometry[`${num.id}-${num.level}`] = hangingWidth;
+			let hangingStyles: Record<string, string> = {};
+			let pHangingStyles: Record<string, string> = {};
+
+			if (hangingWidth) {
+				hangingStyles = {
+					"text-indent": "0",
+					"width": `var(${hangingVar})`
+				};
+				pHangingStyles = { [hangingVar]: hangingWidth };
+			}
+
 			if (num.bullet) {
-				let valiable = `--${this.className}-${num.bullet.src}`.toLowerCase();
+				let bulletImageVar = `--${this.className}-${num.bullet.src}`.toLowerCase();
+
+				pHangingStyles = { ...pHangingStyles, [beforeDisplayVar]: "inline-block" };
 
 				styleText += this.styleToString(`${selector}:before`, {
 					"content": "' '",
-					"display": "inline-block",
-					"background": `var(${valiable})`
+					"display": `var(${beforeDisplayVar})`,
+					"background": `var(${bulletImageVar})`,
+					...hangingStyles,
 				}, num.bullet.style);
 
 				try {
 					const imgData = await this.document.loadNumberingImage(num.bullet.src);
-					styleText += `${this.rootSelector} { ${valiable}: url(${imgData}) }`;
+					styleText += `${this.rootSelector} { ${bulletImageVar}: url(${imgData}) }`;
 				} catch(e) {
 					if (this.options.debug) console.warn(`Can't load numbering image with src ${num.bullet.src}`);
 				}
@@ -663,10 +684,14 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 				// reset all level counters with start value
 				resetCounters.push(counterReset);
 
+				pHangingStyles = { ...pHangingStyles, [beforeDisplayVar]: hangingWidth ? "inline-block" : "inline" };
+
 				styleText += this.styleToString(`${selector}:before`, {
 					"content": this.levelTextToContent(num.levelText, num.suff, num.id, this.numFormatToCssValue(num.format)),
 					"counter-increment": counter,
+					"display": `var(${beforeDisplayVar})`,
 					...num.rStyle,
+					...hangingStyles,
 				});
 			}
 			else {
@@ -677,7 +702,8 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 				"display": "list-item",
 				"list-style-position": "inside",
 				"list-style-type": listStyleType,
-				...num.pStyle
+				...num.pStyle,
+				...pHangingStyles,
 			});
 		}
 
@@ -943,6 +969,17 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
 
 		if (numbering) {
 			result.classList.add(this.numberingClass(numbering.id, numbering.level));
+
+			const numDefault = this.numberingGeometry[`${numbering.id}-${numbering.level}`];
+			const paraOverride = elem.cssStyle?.["text-indent"];
+			const effectiveHanging = paraOverride !== undefined
+				? (paraOverride.startsWith("-") ? paraOverride.slice(1) : null)
+				: numDefault;
+
+			if (effectiveHanging !== numDefault) {
+				result.style.setProperty("--docx-num-hanging-width", effectiveHanging ?? "0");
+				result.style.setProperty("--docx-num-before-display", effectiveHanging ? "inline-block" : "inline");
+			}
 		}
 
 		return result;
