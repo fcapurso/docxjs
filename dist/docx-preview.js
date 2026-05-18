@@ -3632,6 +3632,11 @@ section.${c}>footer { z-index: 1; display: flex; flex-direction: column; justify
                         if (fontAttrs.length > 0)
                             styleText += this.styleToString(`${style.target}.${style.cssName}::before`, this.copyStyleProperties(subStyle.values, null, fontAttrs));
                     }
+                    if (style.target == null && subStyle.target === "span") {
+                        const fontAttrs = ["font-size", "font-family"].filter(k => subStyle.values[k]);
+                        if (fontAttrs.length > 0)
+                            styleText += this.styleToString(`.${this.className} p::before`, this.copyStyleProperties(subStyle.values, null, fontAttrs));
+                    }
                 }
             }
             return [
