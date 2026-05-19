@@ -38,6 +38,7 @@ export class WordDocument {
 	contentTypes: ContentType[] = [];
 
 	documentPart: DocumentPart;
+	fontUsageBySection?: any;
 	fontTablePart: FontTablePart;
 	numberingPart: NumberingPart;
 	stylesPart: StylesPart;

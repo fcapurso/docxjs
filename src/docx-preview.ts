@@ -20,6 +20,7 @@ export interface Options {
 	renderEndnotes: boolean;
     ignoreLastRenderedPageBreak: boolean;
 	useBase64URL: boolean;
+	collectFontUsage: boolean;
 	renderChanges: boolean;
     renderComments: boolean;
     renderAltChunks: boolean;
@@ -43,6 +44,7 @@ export const defaultOptions: Options = {
     renderFootnotes: true,
 	renderEndnotes: true,
 	useBase64URL: false,
+	collectFontUsage: false,
 	renderChanges: false,
     renderComments: false,
     renderAltChunks: true,

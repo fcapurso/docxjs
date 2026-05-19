@@ -3178,6 +3178,9 @@ class HtmlRenderer {
         if (this.commentHighlight && options.renderComments) {
             CSS.highlights.set(`${this.className}-comments`, this.commentHighlight);
         }
+        if (options.collectFontUsage) {
+            document.fontUsageBySection = this.collectFontUsageBySection();
+        }
         this.postRenderTasks.forEach(t => t());
         await Promise.allSettled(this.tasks);
         this.refreshTabStops();
@@ -3205,6 +3208,46 @@ class HtmlRenderer {
             this.h({ tagName: "#comment", children: ["docxjs document theme values"] }),
             this.h({ tagName: "style", children: [cssText] })
         ];
+    }
+    collectFontUsageBySection() {
+        const WEIGHT_MAP = { bold: '700', normal: '400' };
+        const normalize = (family, weight, style) => ({
+            family: family.toLowerCase(),
+            weight: WEIGHT_MAP[weight ?? ''] ?? weight ?? '400',
+            style: style ?? 'normal',
+        });
+        const extract = (el) => {
+            const results = [];
+            const ff = el.cssStyle?.['font-family'];
+            if (ff) {
+                for (const part of ff.split(',')) {
+                    const name = part.trim().replace(/^["']|["']$/g, '');
+                    if (name && !name.startsWith('var('))
+                        results.push(normalize(name, el.cssStyle?.['font-weight'], el.cssStyle?.['font-style']));
+                }
+            }
+            for (const child of el.children ?? [])
+                results.push(...extract(child));
+            return results;
+        };
+        const dedup = (arr) => [...new Map(arr.map(d => [`${d.family}|${d.weight}|${d.style}`, d])).values()];
+        const bodyDescriptors = extract(this.document.documentPart.body);
+        const headerDescriptors = [];
+        const footerDescriptors = [];
+        for (const part of Object.values(this.document.partsMap ?? {})) {
+            const root = part.rootElement;
+            if (!root)
+                continue;
+            if (part instanceof HeaderPart)
+                headerDescriptors.push(...extract(root));
+            else if (part instanceof FooterPart)
+                footerDescriptors.push(...extract(root));
+        }
+        return [{
+                header: dedup(headerDescriptors),
+                body: dedup(bodyDescriptors),
+                footer: dedup(footerDescriptors),
+            }];
     }
     async renderFontTable(fontsPart) {
         const result = [];
@@ -4347,6 +4390,7 @@ const defaultOptions = {
     renderFootnotes: true,
     renderEndnotes: true,
     useBase64URL: false,
+    collectFontUsage: false,
     renderChanges: false,
     renderComments: false,
     renderAltChunks: true,

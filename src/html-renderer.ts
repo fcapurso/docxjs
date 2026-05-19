@@ -19,11 +19,13 @@ import { WmlBookmarkStart } from './document/bookmarks';
 import { IDomStyle } from './document/style';
 import { WmlBaseNote, WmlFootnote } from './notes/elements';
 import { ThemePart } from './theme/theme-part';
-import { BaseHeaderFooterPart } from './header-footer/parts';
+import { BaseHeaderFooterPart, HeaderPart, FooterPart } from './header-footer/parts';
 import { Part } from './common/part';
 import { VmlElement } from './vml/vml';
 import { WmlComment, WmlCommentRangeStart, WmlCommentReference } from './comments/elements';
 import { cx, h, ns } from './html';
+
+interface FontDescriptor { family: string; weight: string; style: string; }
 
 interface CellPos {
 	col: number;
@@ -137,6 +139,10 @@ export class HtmlRenderer {
 			(CSS as any).highlights.set(`${this.className}-comments`, this.commentHighlight);
 		}
 
+		if (options.collectFontUsage) {
+			document.fontUsageBySection = this.collectFontUsageBySection();
+		}
+
 		this.postRenderTasks.forEach(t => t());
 
 		await Promise.allSettled(this.tasks);
@@ -173,6 +179,53 @@ export class HtmlRenderer {
 			this.h({ tagName: "#comment", children: ["docxjs document theme values"] }),
 			this.h({ tagName: "style", children: [cssText] })
 		];
+	}
+
+	collectFontUsageBySection(): Array<{ header: FontDescriptor[], body: FontDescriptor[], footer: FontDescriptor[] }> {
+		const WEIGHT_MAP: Record<string, string> = { bold: '700', normal: '400' };
+
+		const normalize = (family: string, weight?: string, style?: string): FontDescriptor => ({
+			family: family.toLowerCase(),
+			weight: WEIGHT_MAP[weight ?? ''] ?? weight ?? '400',
+			style:  style ?? 'normal',
+		});
+
+		const extract = (el: OpenXmlElement): FontDescriptor[] => {
+			const results: FontDescriptor[] = [];
+			const ff = el.cssStyle?.['font-family'];
+			if (ff) {
+				for (const part of ff.split(',')) {
+					const name = part.trim().replace(/^["']|["']$/g, '');
+					if (name && !name.startsWith('var('))
+						results.push(normalize(name, el.cssStyle?.['font-weight'], el.cssStyle?.['font-style']));
+				}
+			}
+			for (const child of el.children ?? [])
+				results.push(...extract(child));
+			return results;
+		};
+
+		const dedup = (arr: FontDescriptor[]) =>
+			[...new Map(arr.map(d => [`${d.family}|${d.weight}|${d.style}`, d])).values()];
+
+		const bodyDescriptors = extract(this.document.documentPart.body);
+		const headerDescriptors: FontDescriptor[] = [];
+		const footerDescriptors: FontDescriptor[] = [];
+
+		for (const part of Object.values((this.document as any).partsMap ?? {})) {
+			const root = (part as any).rootElement;
+			if (!root) continue;
+			if (part instanceof HeaderPart)
+				headerDescriptors.push(...extract(root));
+			else if (part instanceof FooterPart)
+				footerDescriptors.push(...extract(root));
+		}
+
+		return [{
+			header: dedup(headerDescriptors),
+			body:   dedup(bodyDescriptors),
+			footer: dedup(footerDescriptors),
+		}];
 	}
 
 	async renderFontTable(fontsPart: FontTablePart) {
