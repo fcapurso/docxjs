@@ -1,3 +1,6 @@
+// Modified by The Agile Bakery in the fork https://github.com/fcapurso/docxjs
+// under the Apache License 2.0; the changes are listed in that fork's README.
+
 import {
 	DomType, WmlTable, IDomNumbering,
 	WmlHyperlink, WmlSmartTag, IDomImage, OpenXmlElement, WmlTableColumn, WmlTableCell,

@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Added by The Agile Bakery in the fork https://github.com/fcapurso/docxjs; not part
+// of upstream docxjs. Apache License 2.0, as the rest of the repository.
+
 
 import fs from "fs";
 import path from "path";

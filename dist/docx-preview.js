@@ -2,7 +2,7 @@
  * @license
  * docx-preview <https://github.com/VolodymyrBaydalka/docxjs>
  * Released under Apache License 2.0  <https://github.com/VolodymyrBaydalka/docxjs/blob/master/LICENSE>
- * Copyright Volodymyr Baydalka
+ * Copyright Volodymyr Baydalka. Modified by The Agile Bakery: https://github.com/fcapurso/docxjs
  */
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('jszip')) :
