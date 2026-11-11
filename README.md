@@ -4,6 +4,19 @@
 # docxjs
 Docx rendering library
 
+> **This is a modified fork.** It is a fork of
+> [VolodymyrBaydalka/docxjs](https://github.com/VolodymyrBaydalka/docxjs), changed by
+> The Agile Bakery for JiraPDF Kit, and distributed under the same Apache License 2.0
+> (`LICENSE`). The changes are on the branch `fork/docxjs-app-patches`, made over
+> upstream commit `5ea4124`; `master` differs from upstream only in `.gitignore` and
+> two development dependency versions in `package.json`.
+>
+> Every changed file that can hold a comment says it was changed. These cannot, and
+> were changed too: `package.json`, the four source maps in `dist/`, the expected
+> outputs `tests/render-test/*/result.html`, and the test documents
+> `tests/render-test/images/document.docx` and
+> `tests/render-test/textbox-vml/document.docx`.
+
 Demo - https://volodymyrbaydalka.github.io/docxjs/
 
 Goal
